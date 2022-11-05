@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
 
-def gridsearch(estimator, data, labels, parameter_space, r_seed, scoring, num_folds=5):
+def gridsearch(estimator, data, labels, parameter_space, scoring, num_folds=5):
     """
     Performs a grid search cross validation procedure using the estimator and data over the
     given parameter space. Can be used with any estimators from the sklearn library.

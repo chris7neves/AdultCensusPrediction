@@ -1,10 +1,11 @@
 from paths import DATA_DIR
 from src.preprocessing import clean_adult, preprocess
 from src.gridsearch import gridsearch, randomgridsearch
-from src.metrics import get_f1_score
+from src.plotting_metrics import get_f1_score, plot_confusion_matrix_display, plot_roc_curve
 
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
 
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
@@ -58,19 +59,33 @@ if __name__ == "__main__":
 
     # Run the kfold cross validation to get the best model
     param_grid_rf = {
-        'n_estimators': [10, 20, 50, 100, 150, 200],
+        'n_estimators': [5, 10, 20, 50, 100, 150, 200],
         'max_depth': [None, 5, 10, 20, 50, 100, 200],
         'max_features': [None, 'sqrt', 'log2', ] + list(np.arange(0.5, 1, 0.1)),
         'min_samples_split': [2, 4, 5, 10, 15, 20],
         'bootstrap': [True, False]
     }
-    best_rf_model = randomgridsearch(estimator, full_dset, labels, param_grid_rf, r_seed, 1, 'f1_macro', num_folds=5)
+    best_rf_model = randomgridsearch(estimator, full_dset, labels, param_grid_rf, r_seed, 100, 'f1_macro', num_folds=5)
+
+    print("-------------------------------------------------------")
+    print("Best model Parameters:\n")
+    print(best_rf_model.get_params(), "\n\n")
+    print("-------------------------------------------------------")
 
     # Get the results on the held out 10% of data
     test_preds = best_rf_model.predict(X_test)
 
     f1 = get_f1_score(y_test, test_preds)
-
     print(f1)
+
+    conf_mat = plot_confusion_matrix_display(y_test, test_preds)
+    # conf_mat.plot()
+
+    # plt.show()
+
+    roc_curve = plot_roc_curve(y_test, test_preds, best_rf_model.predict_proba(X_test))
+    roc_curve.plot()
+
+    plt.show()
 
     # Plot results using the unseen 10% of data
