@@ -11,7 +11,7 @@ def gridsearch(estimator, data, labels, parameter_space, scoring, num_folds=5):
     Returns the most succesful model.
     """
 
-    best_model = GridSearchCV(estimator, parameter_space, scoring=scoring, cv=num_folds)
+    best_model = GridSearchCV(estimator, parameter_space, scoring=scoring, cv=num_folds, verbose=5)
 
     best_model.fit(data, labels)
 
@@ -26,7 +26,7 @@ def randomgridsearch(estimator, data, labels, parameter_space, r_seed, n_iter, s
 
     best_model = RandomizedSearchCV(estimator, parameter_space, n_iter=n_iter, 
                                     scoring=scoring, cv=num_folds, n_jobs=-1, 
-                                    random_state=r_seed, verbose=1)
+                                    random_state=r_seed, verbose=5)
 
     best_model.fit(data, labels)
 

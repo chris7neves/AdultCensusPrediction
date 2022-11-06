@@ -1,5 +1,7 @@
 import pandas as pd
 
+from sklearn.inspection import permutation_importance
+from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.metrics import (f1_score, accuracy_score, recall_score, precision_score, confusion_matrix, ConfusionMatrixDisplay,
                             precision_recall_curve, PrecisionRecallDisplay, roc_curve, RocCurveDisplay)
 
@@ -60,17 +62,18 @@ def plot_roc_curve(labels, preds, probs):
 
     return roc
 
-def get_feature_importance(train_features, trained_model):
+def get_feature_importance(data, labels, feature_names, strategy='extreme_random', r_seed=7):
     """
     Get the importances of each feature in making a correct prediction.
-    Returns a pandas dataframe.
     """
 
-    fi = pd.DataFrame(
-        {
-            'Feature':train_features,
-            'Importance':trained_model.feature_importances_
-        }
-    ).sort_values('Importance', ascending=False)
 
-    return fi
+    if strategy == 'extreme_random':
+        extr = ExtraTreesClassifier(random_state=r_seed)
+        extr.fit(data, labels)
+
+        importances = extr.feature_importances_
+
+    imp_pd = pd.DataFrame(importances, index=extr.feature_names_in_)
+    
+    return imp_pd

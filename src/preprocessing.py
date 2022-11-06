@@ -1,9 +1,12 @@
 from paths import ROOT_DIR, DATA_DIR, SRC_DIR
+from src.plotting_metrics import get_feature_importance
 
 import numpy as np
 import pandas as pd
 
 from sklearn.preprocessing import StandardScaler
+
+from imblearn.over_sampling import SMOTE, RandomOverSampler
 
 def clean_adult(df):
     """
@@ -36,8 +39,7 @@ def clean_adult(df):
 
 def preprocess(df, one_hot=[], drop_education=True, scale=[]):
     """
-    NOTE: ONE HOT ENCODING SHOULD NOT BE USED WITH RANDOM FORESTS
-    https://towardsdatascience.com/one-hot-encoding-is-making-your-tree-based-ensembles-worse-heres-why-d64b282b5769
+    Performs the relevant transforms on the data to prepare it for use with a model.
     """
     
     adf = df.copy()
@@ -61,3 +63,30 @@ def preprocess(df, one_hot=[], drop_education=True, scale=[]):
         adf[scale] = scaler.fit_transform(adf[scale])
     
     return adf
+
+def oversample_classes(train_data, train_labels, strategy='SMOTE'):
+
+    print("Label value counts before oversampling:")
+    print(train_labels.value_counts())
+
+    if strategy == "SMOTE":
+        oversampler = SMOTE()
+    elif strategy == "random":
+        oversampler = RandomOverSampler()
+    else:
+        print("{} is an invalid oversampling strategy. No oversampling will be performed.")
+        return train_data, train_labels
+
+    over_data, over_labels = oversampler.fit_resample(train_data, train_labels)
+
+    print("Label value counts after oversampling:")
+    print(over_labels.value_counts())
+
+    return over_data, over_labels
+
+# def feature_reduction(data, labels, feature_names, drop_threshold, fi_strategy='extreme_random', r_seed=7):
+
+#     if fi_strategy == "extreme_random":
+#         fi = get_feature_importance(data, labels, feature_names)
+
+#         fi.

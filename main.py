@@ -1,7 +1,8 @@
 from paths import DATA_DIR
-from src.preprocessing import clean_adult, preprocess
+from src.preprocessing import clean_adult, preprocess, oversample_classes
 from src.gridsearch import gridsearch, randomgridsearch
-from src.plotting_metrics import get_f1_score, plot_confusion_matrix_display, plot_roc_curve
+from src.plotting_metrics import get_f1_score, plot_confusion_matrix_display, plot_roc_curve, get_feature_importance, get_accuracy
+from src.util import save_params
 
 import pandas as pd
 import numpy as np
@@ -44,7 +45,6 @@ if __name__ == "__main__":
 
     # Combine them to form a single dset, get labels and data
     clean_combined = pd.concat([clean_data, clean_test], ignore_index=True, axis='index')
-    
 
     # Preprocess both datasets
     full_dset = preprocess(clean_combined, drop_education=True, one_hot=["workclass", "marital-status", "occupation", "relationship", "race", "sex", "native-country"])
@@ -57,35 +57,48 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(full_dset, labels, test_size=0.1, 
                                                         stratify=labels, random_state=r_seed)
 
+    # Oversample the data
+    X_train, y_train = oversample_classes(X_train, y_train, strategy="random")
+
+    # Find the feature importances
+
     # Run the kfold cross validation to get the best model
     param_grid_rf = {
         'n_estimators': [5, 10, 20, 50, 100, 150, 200],
         'max_depth': [None, 5, 10, 20, 50, 100, 200],
         'max_features': [None, 'sqrt', 'log2', ] + list(np.arange(0.5, 1, 0.1)),
-        'min_samples_split': [2, 4, 5, 10, 15, 20],
-        'bootstrap': [True, False]
+        'min_samples_split': [2, 5, 10, 15, 20]
     }
-    best_rf_model = randomgridsearch(estimator, full_dset, labels, param_grid_rf, r_seed, 100, 'f1_macro', num_folds=5)
+
+    #best_rf_model = randomgridsearch(estimator, X_train, y_train, param_grid_rf, r_seed, 3000, 'f1_macro', num_folds=5)
+    best_rf_model = gridsearch(estimator, X_train, y_train, param_grid_rf, 'f1_macro', num_folds=5)
+
+    # best_rf_model_params = {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 0.6, 'max_leaf_nodes': None, 
+    # 'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 20, 'min_weight_fraction_leaf': 0.0, 'n_estimators': 17, 'n_jobs': None, 'oob_score': False, 
+    # 'random_state':7, 'verbose':2, 'warm_start':False}
+    # best_rf_model = RandomForestClassifier(max_depth=100, max_features=0.5, min_samples_split=2, n_estimators=200)
+    # best_rf_model.fit(X_train, y_train)
 
     print("-------------------------------------------------------")
     print("Best model Parameters:\n")
-    print(best_rf_model.get_params(), "\n\n")
+    print(best_rf_model.get_params())
+    print("\n\n")
     print("-------------------------------------------------------")
+
+    # Save the parameters to a json
+    save_params(best_rf_model.get_params())
 
     # Get the results on the held out 10% of data
     test_preds = best_rf_model.predict(X_test)
 
     f1 = get_f1_score(y_test, test_preds)
-    print(f1)
+    print("F1 Score: {}".format(f1))
+
+    acc = get_accuracy(y_test, test_preds)
+    print("Acc: {}".format(acc))
 
     conf_mat = plot_confusion_matrix_display(y_test, test_preds)
-    # conf_mat.plot()
-
-    # plt.show()
-
     roc_curve = plot_roc_curve(y_test, test_preds, best_rf_model.predict_proba(X_test))
     roc_curve.plot()
 
     plt.show()
-
-    # Plot results using the unseen 10% of data
