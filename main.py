@@ -58,7 +58,7 @@ if __name__ == "__main__":
                                                         stratify=labels, random_state=r_seed)
 
     # Oversample the data
-    X_train, y_train = oversample_classes(X_train, y_train, strategy="random")
+    #X_train, y_train = oversample_classes(X_train, y_train, strategy="random")
 
     # Find the feature importances
 
@@ -70,14 +70,16 @@ if __name__ == "__main__":
         'min_samples_split': [2, 5, 10, 15, 20]
     }
 
-    #best_rf_model = randomgridsearch(estimator, X_train, y_train, param_grid_rf, r_seed, 3000, 'f1_macro', num_folds=5)
-    best_rf_model = gridsearch(estimator, X_train, y_train, param_grid_rf, 'f1_macro', num_folds=5)
+    # Use either random grid search (faster) of exhaustive grid search to search for optimal hypterparams
 
-    # best_rf_model_params = {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 0.6, 'max_leaf_nodes': None, 
-    # 'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 20, 'min_weight_fraction_leaf': 0.0, 'n_estimators': 17, 'n_jobs': None, 'oob_score': False, 
-    # 'random_state':7, 'verbose':2, 'warm_start':False}
-    # best_rf_model = RandomForestClassifier(max_depth=100, max_features=0.5, min_samples_split=2, n_estimators=200)
-    # best_rf_model.fit(X_train, y_train)
+    #best_rf_model = randomgridsearch(estimator, X_train, y_train, param_grid_rf, r_seed, 3000, 'f1_macro', num_folds=5)
+    #best_rf_model = gridsearch(estimator, X_train, y_train, param_grid_rf, 'f1_macro', num_folds=5)
+
+    best_rf_model_params = {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 0.6, 'max_leaf_nodes': None, 
+    'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 1, 'min_samples_split': 20, 'min_weight_fraction_leaf': 0.0, 'n_estimators': 17, 'n_jobs': None, 'oob_score': False, 
+    'random_state':7, 'verbose':2, 'warm_start':False}
+    best_rf_model = RandomForestClassifier(**best_rf_model_params)
+    best_rf_model.fit(X_train, y_train)
 
     print("-------------------------------------------------------")
     print("Best model Parameters:\n")
