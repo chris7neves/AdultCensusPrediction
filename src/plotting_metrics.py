@@ -56,10 +56,7 @@ def plot_roc_curve(labels, preds, probs):
     """
     Gets the ROC curve display object from scikit learn, which can be used to plot.
     """
-
-    fpr, tpr, _ = roc_curve(labels, probs[:, 1])
-    roc = RocCurveDisplay(fpr=fpr, tpr=tpr)
-
+    roc = RocCurveDisplay.from_predictions(labels, probs[:, 1])
     return roc
 
 def get_roc_score(labels, probs):

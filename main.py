@@ -1,9 +1,11 @@
 import argparse
+import pprint
+from datetime import datetime
 
 from paths import DATA_DIR
 from src.preprocessing import clean_adult, preprocess, oversample_classes
 from src.plotting_metrics import get_f1_score, plot_confusion_matrix_display, plot_roc_curve, get_accuracy, get_roc_score
-from src.util import save_params, load_params, check_pos_int_arg, check_pos_float_arg
+from src.util import save_params, load_params, check_pos_int_arg, check_pos_float_arg, save_plot
 from src.gridsearch import randomgridsearch, gridsearch
 from parameter_grid import param_grid_rf
 
@@ -23,6 +25,7 @@ def main(args):
     r_seed = 7
 
     # Import data
+    print("Importing data...")
     data_file_path = DATA_DIR / "adult.data"
     adult_data = pd.read_csv(data_file_path, names=[
         "age", "workclass", "fnlwgt", "education",
@@ -40,17 +43,22 @@ def main(args):
         "capital-loss", "hours-per-week", "native-country",
         "salary"
     ])
+    print("Importing done.")
 
     # Clean the data
+    print("Cleaning dataset...")
     clean_data = clean_adult(adult_data)
     clean_test = clean_adult(adult_test)
+    print("Cleaning done.")
 
     # Combine them to form a single dset, get labels and data
+    print("Preprocessing dataset...")
     clean_combined = pd.concat([clean_data, clean_test], ignore_index=True, axis='index')
 
     # Preprocess both datasets
     full_dset = preprocess(clean_combined, to_drop=["education", "fnlwgt", "race", "native-country"], one_hot=["workclass", "marital-status", "occupation", "relationship", "race", "sex", "native-country"])
     labels = full_dset.pop("salary")
+    print("Preprocessing done.")
 
     # Reserve 10% of the data to be the final testing set (grid search already performs cross validation)
     X_train, X_test, y_train, y_test = train_test_split(full_dset, labels, test_size=0.1, 
@@ -64,7 +72,7 @@ def main(args):
     else:
         print("No oversampling will be used.")
 
-    # Parameter selection
+    # Parameter selection strategy
     if args.model_param == "load":
         model_params = load_params(args.param_file)
         estimator = RandomForestClassifier(**model_params)
@@ -78,58 +86,57 @@ def main(args):
 
     elif args.model_param == "exhaustive":
         temp = RandomForestClassifier(random_state=r_seed)
-        print("\nPerforming a random hyperparameter grid search with {} iterations and {} folds per iteration. This may take a minute...\n".format(
-            args.random_search_iter, args.num_folds
+        print("\nPerforming an exhaustive hyperparameter grid search with {} folds per iteration. This may take a minute...\n".format(
+            args.num_folds
         ))
-        estimator = gridsearch(estimator, X_train, y_train, param_grid_rf, 'f1_macro', num_folds=5)
+        estimator = gridsearch(estimator, X_train, y_train, param_grid_rf, 'f1_macro', num_folds=args.num_folds)
 
-    # Run the kfold cross validation to get the best model
+    estimator.fit(X_train, y_train)
 
-
-    # Use either random grid search (faster) of exhaustive grid search to search for optimal hypterparams
-
-    #
-    #best_rf_model = gridsearch(estimator, X_train, y_train, param_grid_rf, 'f1_macro', num_folds=5)
-
-    best_rf_model_params = {'bootstrap': True, 'ccp_alpha': 0.0, 'class_weight': None, 'criterion': 'gini', 'max_depth': None, 'max_features': 0.6, 'max_leaf_nodes': None, 
-        'max_samples': None, 'min_impurity_decrease': 0.0, 'min_samples_leaf': 20, 'min_samples_split': 20, 'min_weight_fraction_leaf': 0.0, 'n_estimators': 17, 'n_jobs': None, 
-        'oob_score': False, 'random_state': 7, 'verbose': 2, 'warm_start': False}
-
-    best_rf_model = RandomForestClassifier(**best_rf_model_params)
-    best_rf_model.fit(X_train, y_train)
-
+    print("\nModel Parameters:")
     print("-------------------------------------------------------")
-    print("Best model Parameters:\n")
-    print(best_rf_model.get_params())
-    print("\n\n")
-    print("-------------------------------------------------------")
+    pprint.pprint(estimator.get_params())
+    print("-------------------------------------------------------\n")
 
     # Save the parameters to a json
-    save_params(best_rf_model.get_params())
+    if args.save_params:
+        print("Saving parameters to params/")
+        save_params(estimator.get_params())
 
     # Get the results on the held out 10% of data
-    test_preds = best_rf_model.predict(X_test)
+    test_preds = estimator.predict(X_test)
+    test_probs = estimator.predict_proba(X_test)
 
+    print("\n Model Performance:")
+    print("-------------------------------------------------------")
     f1 = get_f1_score(y_test, test_preds)
     print("F1 Score: {}".format(f1))
 
     acc = get_accuracy(y_test, test_preds)
-    print("Acc: {}".format(acc))
+    print("Accuracy: {}".format(acc))
 
-    roc_auc = get_roc_score(y_test, best_rf_model.predict_proba(X_test))
+    roc_auc = get_roc_score(y_test, test_probs)
     print("Area under ROC curve: {}".format(roc_auc))
+    print("-------------------------------------------------------\n")
 
     conf_mat = plot_confusion_matrix_display(y_test, test_preds)
-    roc_curve = plot_roc_curve(y_test, test_preds, best_rf_model.predict_proba(X_test))
-    roc_curve.plot()
+    roc_curve = plot_roc_curve(y_test, test_preds, test_probs)
 
-    plt.show()
+    if args.show_plots:
+        plt.show()
+
+    if args.save_plots:
+        # Get the date and time
+        now = datetime.now()
+        now_string = now.strftime("%d_%m_%y_%H_%M_%S")
+        save_plot(conf_mat, "conf_mat_{}.png".format(now_string))
+        save_plot(roc_curve, "roc_curve_{}.png".format(now_string))
 
 
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Adult Census Prediction using Random Forest Classifier.")
-    parser.add_argument("--model_param", action="store", choices=["exhaustive", "load", "random_search"])
+    parser.add_argument("--model_param", action="store", choices=["exhaustive", "load", "random_search"], default="load")
     parser.add_argument("--random_search_iter", action="store", type=check_pos_int_arg, default=1000)
     parser.add_argument("--num_folds", action="store", type=check_pos_int_arg, default=5)
     parser.add_argument("--param_file", action="store", default="best_params.json")

@@ -1,8 +1,11 @@
 import json
 from datetime import datetime
 import argparse
+from pathlib import Path
 
-from paths import PARAMS_DIR, CONFIG_PATH
+from paths import PARAMS_DIR, CONFIG_PATH, PLOTS_PATH
+
+import matplotlib.pyplot as plt
 
 def save_params(params, filename=None):
 
@@ -47,3 +50,22 @@ def check_pos_float_arg(val):
         argparse.ArgumentTypeError("{} is not a positive float value.".format(val))
     else:
         return i
+
+def save_plot(p, filename):
+
+    # Make sure plot dir exists.
+    p_path = Path(PLOTS_PATH)
+    if not p_path.is_dir():
+        p_path.mkdir(parents=False, exist_ok=False)
+    
+    # Save plot
+    filepath = PLOTS_PATH / filename
+
+    try:
+        p.savefig(filepath)
+    except AttributeError:
+        pass
+    try:
+        p.figure_.savefig(filepath)
+    except Exception as err:
+        raise
