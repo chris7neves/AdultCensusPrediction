@@ -3,10 +3,9 @@ from src.plotting_metrics import get_feature_importance
 
 import numpy as np
 import pandas as pd
-
 from sklearn.preprocessing import StandardScaler
-
 from imblearn.over_sampling import SMOTE, RandomOverSampler
+
 
 def clean_adult(df):
     """
@@ -65,9 +64,19 @@ def preprocess(df, one_hot=[], to_drop=['education'], scale=[]):
     
     return adf
 
-def oversample_classes(train_data, train_labels, strategy='SMOTE', ratio=0.5):
 
-    print("Label value counts before oversampling:")
+def oversample_classes(train_data, train_labels, strategy='SMOTE', ratio=0.5):
+    """
+    Performs oversampling to help the classifier learn more about the minority class.
+    Either the SMOTE or random oversampling techniques can be used.
+
+    NOTE: Oversampling MUST be used on the training dataset AFTER splitting the data. 
+    If not, the results will be overly optimistic.
+
+    ratio: the goal proportion of the minority class compared to the majority class.
+    """
+
+    print("\nLabel value counts before oversampling:")
     print(train_labels.value_counts())
 
     if strategy == "SMOTE":
@@ -82,12 +91,6 @@ def oversample_classes(train_data, train_labels, strategy='SMOTE', ratio=0.5):
 
     print("Label value counts after oversampling:")
     print(over_labels.value_counts())
+    print()
 
     return over_data, over_labels
-
-# def feature_reduction(data, labels, feature_names, drop_threshold, fi_strategy='extreme_random', r_seed=7):
-
-#     if fi_strategy == "extreme_random":
-#         fi = get_feature_importance(data, labels, feature_names)
-
-#         fi.

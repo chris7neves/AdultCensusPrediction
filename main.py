@@ -4,7 +4,8 @@ from datetime import datetime
 
 from paths import DATA_DIR
 from src.preprocessing import clean_adult, preprocess, oversample_classes
-from src.plotting_metrics import get_f1_score, plot_confusion_matrix_display, plot_roc_curve, get_accuracy, get_roc_score
+from src.plotting_metrics import (get_f1_score, plot_confusion_matrix_display, 
+    plot_roc_curve, get_accuracy, get_roc_score, get_precision_recall, get_feature_importance)
 from src.util import save_params, load_params, check_pos_int_arg, check_pos_float_arg, save_plot
 from src.gridsearch import randomgridsearch, gridsearch
 from parameter_grid import param_grid_rf
@@ -22,7 +23,7 @@ pd.set_option('display.max_columns', None)
 def main(args):
         
     # Define the seed for the run
-    r_seed = 7
+    r_seed = 10
 
     # Import data
     print("Importing data...")
@@ -63,6 +64,11 @@ def main(args):
     # Reserve 10% of the data to be the final testing set (grid search already performs cross validation)
     X_train, X_test, y_train, y_test = train_test_split(full_dset, labels, test_size=0.1, 
                                                         stratify=labels, random_state=r_seed)
+
+    # Print feature importances
+    if args.print_importances:
+        fi = get_feature_importance(full_dset, labels, r_seed=r_seed)
+        print(fi)
 
     # Oversample the data
     if args.oversample_type == "SMOTE":
@@ -110,13 +116,17 @@ def main(args):
     print("\n Model Performance:")
     print("-------------------------------------------------------")
     f1 = get_f1_score(y_test, test_preds)
-    print("F1 Score: {}".format(f1))
+    print("F1 Macro Score: {}".format(f1))
 
     acc = get_accuracy(y_test, test_preds)
     print("Accuracy: {}".format(acc))
 
     roc_auc = get_roc_score(y_test, test_probs)
     print("Area under ROC curve: {}".format(roc_auc))
+
+    precision, recall = get_precision_recall(y_test, test_preds)
+    print("Precision: {}".format(precision))
+    print("Recall: {}".format(recall))
     print("-------------------------------------------------------\n")
 
     conf_mat = plot_confusion_matrix_display(y_test, test_preds)
@@ -146,6 +156,8 @@ if __name__ == "__main__":
     parser.add_argument("--save_params", action="store_true")
     parser.add_argument("--oversample_type", action="store", default="SMOTE", choices=["SMOTE", "random", "none"])
     parser.add_argument("--sampling_strategy", action="store", type=check_pos_float_arg, default=0.5)
+    parser.add_argument("--print_importances", action="store_true")
+
 
     args = parser.parse_args()
 

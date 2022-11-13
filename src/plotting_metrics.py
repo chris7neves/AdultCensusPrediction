@@ -1,5 +1,4 @@
 import pandas as pd
-
 from sklearn.inspection import permutation_importance
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.metrics import (f1_score, accuracy_score, recall_score, precision_score, confusion_matrix, ConfusionMatrixDisplay,
@@ -15,12 +14,14 @@ def get_f1_score(labels, preds, average='macro'):
 
     return f1
 
+
 def get_accuracy(labels, preds, raw_correct=True):
     """
     Get the accuracy of the predictions. If raw correct is true, simply return number of correct predictions.
     """
 
     return accuracy_score(labels, preds, normalize=raw_correct)
+
 
 def get_precision_recall(labels, preds, average="macro"):
     """
@@ -42,6 +43,7 @@ def get_confusion_matrix_df(labels, preds, label_dict):
                     columns=[i[1] for i in label_dict.items()])
     return cm_df
 
+
 def plot_confusion_matrix_display(labels, preds, figsize=(15, 8)):
     """
     Gets the Confusion Matrix Display object from Scikit learn.
@@ -52,12 +54,14 @@ def plot_confusion_matrix_display(labels, preds, figsize=(15, 8)):
 
     return conf_mat
 
+
 def plot_roc_curve(labels, preds, probs):
     """
     Gets the ROC curve display object from scikit learn, which can be used to plot.
     """
     roc = RocCurveDisplay.from_predictions(labels, probs[:, 1])
     return roc
+
 
 def get_roc_score(labels, probs):
     """
@@ -67,11 +71,11 @@ def get_roc_score(labels, probs):
     score = roc_auc_score(labels, probs[:, 1])
     return score
 
-def get_feature_importance(data, labels, feature_names, strategy='extreme_random', r_seed=7):
+
+def get_feature_importance(data, labels, strategy='extreme_random', r_seed=7):
     """
     Get the importances of each feature in making a correct prediction.
     """
-
 
     if strategy == 'extreme_random':
         extr = ExtraTreesClassifier(random_state=r_seed)
