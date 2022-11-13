@@ -136,7 +136,8 @@ def main(args):
 if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Adult Census Prediction using Random Forest Classifier.")
-    parser.add_argument("--model_param", action="store", choices=["exhaustive", "load", "random_search"], default="load")
+    parser.add_argument("--model_param", action="store", choices=["exhaustive", "load", "random_search"], default="load", 
+                        help="Choose the parameters for the model. exhaustive performs GridSearchCV, load will load a parameter json and random_search performs a random grid search.")
     parser.add_argument("--random_search_iter", action="store", type=check_pos_int_arg, default=1000)
     parser.add_argument("--num_folds", action="store", type=check_pos_int_arg, default=5)
     parser.add_argument("--param_file", action="store", default="best_params.json")
