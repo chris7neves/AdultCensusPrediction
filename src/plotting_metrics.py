@@ -3,7 +3,7 @@ import pandas as pd
 from sklearn.inspection import permutation_importance
 from sklearn.ensemble import ExtraTreesClassifier
 from sklearn.metrics import (f1_score, accuracy_score, recall_score, precision_score, confusion_matrix, ConfusionMatrixDisplay,
-                            precision_recall_curve, PrecisionRecallDisplay, roc_curve, RocCurveDisplay)
+                            precision_recall_curve, PrecisionRecallDisplay, roc_curve, RocCurveDisplay, roc_auc_score)
 
 
 def get_f1_score(labels, preds, average='macro'):
@@ -61,6 +61,14 @@ def plot_roc_curve(labels, preds, probs):
     roc = RocCurveDisplay(fpr=fpr, tpr=tpr)
 
     return roc
+
+def get_roc_score(labels, probs):
+    """
+    Get the area under the ROC curve.
+    """
+
+    score = roc_auc_score(labels, probs[:, 1])
+    return score
 
 def get_feature_importance(data, labels, feature_names, strategy='extreme_random', r_seed=7):
     """

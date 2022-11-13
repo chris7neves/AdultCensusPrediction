@@ -37,7 +37,7 @@ def clean_adult(df):
     return adf
 
 
-def preprocess(df, one_hot=[], drop_education=True, scale=[]):
+def preprocess(df, one_hot=[], to_drop=['education'], scale=[]):
     """
     Performs the relevant transforms on the data to prepare it for use with a model.
     """
@@ -47,15 +47,16 @@ def preprocess(df, one_hot=[], drop_education=True, scale=[]):
     # Convert the labels for salary to 1 and 0
     adf["salary"].replace({"<=50K":0, ">50K":1}, regex=True, inplace=True)
     
+    # Drop the education column since it is already accounted for in education-num
+    if to_drop:
+        adf.drop(to_drop, axis=1, inplace=True)
+
     # One hot encode all columns in one_hot
     for col in one_hot:
-        temp = pd.get_dummies(adf[col])
-        adf = adf.drop(col, axis=1)
-        adf = adf.join(temp)
-        
-    # Drop the education column since it is already accounted for in education-num
-    if drop_education:
-        adf.drop("education", axis=1, inplace=True)
+        if col in adf.columns:
+            temp = pd.get_dummies(adf[col])
+            adf = adf.drop(col, axis=1)
+            adf = adf.join(temp)
     
     # Scale the desired columns (center values around the column mean and std)
     if scale:
@@ -64,15 +65,15 @@ def preprocess(df, one_hot=[], drop_education=True, scale=[]):
     
     return adf
 
-def oversample_classes(train_data, train_labels, strategy='SMOTE'):
+def oversample_classes(train_data, train_labels, strategy='SMOTE', ratio=0.5):
 
     print("Label value counts before oversampling:")
     print(train_labels.value_counts())
 
     if strategy == "SMOTE":
-        oversampler = SMOTE()
+        oversampler = SMOTE(sampling_strategy=ratio)
     elif strategy == "random":
-        oversampler = RandomOverSampler()
+        oversampler = RandomOverSampler(sampling_strategy=ratio)
     else:
         print("{} is an invalid oversampling strategy. No oversampling will be performed.")
         return train_data, train_labels

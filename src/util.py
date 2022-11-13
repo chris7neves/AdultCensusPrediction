@@ -1,7 +1,8 @@
 import json
 from datetime import datetime
+import argparse
 
-from paths import PARAMS_DIR
+from paths import PARAMS_DIR, CONFIG_PATH
 
 def save_params(params, filename=None):
 
@@ -19,3 +20,30 @@ def save_params(params, filename=None):
             json.dump(params, fout)
 
         print("Parameters were saved to {}".format(file_path))
+
+def load_params(filename):
+
+    filepath = PARAMS_DIR / filename
+    
+    if not filepath.is_file():
+        raise FileNotFoundError("Parameter file {} does not exist.".format(filepath.resolve()))
+
+    with open(filepath, "r") as fin:
+        params = json.load(fin)
+
+    return params
+
+def check_pos_int_arg(val):
+
+    i = int(val)
+    if i < 0:
+        argparse.ArgumentTypeError("{} is not a positive integer value.".format(val))
+    else:
+        return i
+
+def check_pos_float_arg(val):
+    i = float(val)
+    if i < 0:
+        argparse.ArgumentTypeError("{} is not a positive float value.".format(val))
+    else:
+        return i
