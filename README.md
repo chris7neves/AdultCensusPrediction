@@ -190,7 +190,7 @@ This should be used with the hyperparameter grid searches.
 python main.py --oversample_type [SMOTE, random, none] --sampling_strategy <float>
 ```
 
-Specifies the oversampling strategy for the training set. This is only used when --model_param is either exhaustive or random_search.
+Specifies the oversampling strategy for the training set.
 
 The choices are:
 
