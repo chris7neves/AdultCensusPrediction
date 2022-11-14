@@ -49,7 +49,7 @@ Using a random forest classifier, predict whether an individual from the adult c
 
 The following guide will instruct you how to install and run the project. The run that will be described will run the model with the best parameters that were found during the grid search.
 
-KFold is performed while finding the optimal hyperparameters, and the model is tested on a completely unseed 10% of data to prevent data leakage.
+KFold is performed while finding the optimal hyperparameters, and the model is tested on a completely unseen 10% of data to prevent data leakage.
 
 1. Clone the repository to a local directory:
 
