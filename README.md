@@ -2,6 +2,7 @@
 
 Using a random forest classifier, predict whether an individual from the adult census dataset (https://archive.ics.uci.edu/ml/datasets/Adult) earns above or below 50K per annum.
 
+**NOTE: PYTHON 3.9+ IS NEEDED TO RUN THE PROJECT**
 
 
 ## Directory Structure
@@ -46,6 +47,8 @@ Using a random forest classifier, predict whether an individual from the adult c
 **params/**: All saved parameter files are saved here. Parameter files that should be loaded into a model should also be placed here.
 
 ## Installation and Full Run
+
+**NOTE: PYTHON 3.9+ IS NEEDED TO RUN THE PROJECT**
 
 The following guide will instruct you how to install and run the project. The run that will be described will run the model with the best parameters that were found during the grid search.
 

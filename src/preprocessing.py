@@ -44,7 +44,7 @@ def preprocess(df, one_hot=[], to_drop=['education'], scale=[]):
     adf = df.copy()
     
     # Convert the labels for salary to 1 and 0
-    adf["salary"].replace({"<=50K":0, ">50K":1}, regex=True, inplace=True)
+    adf["salary"].replace({"<=50K":0, ">50K":1, "<=50K.":0, ">50K.":1}, regex=True, inplace=True)
     
     # Drop the education column since it is already accounted for in education-num
     if to_drop:
